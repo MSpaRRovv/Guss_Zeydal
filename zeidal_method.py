@@ -2,7 +2,7 @@ import numpy as np
 
 def has_diagonal_dominance(matrix_a: np.ndarray) -> bool:
     """
-    Проверяет, обладает ли матрица строгим диагональным преобладанием
+    Проверяет, обладает ли матрица строгим диагональным преобладанием.
     """
     n = matrix_a.shape[0]
     for i in range(n):
@@ -60,18 +60,21 @@ def zeydal_method(
         # Невязка: r = A * x_new - b
         residual = np.dot(matrix_a, x_new) - vector_b
 
-        # Норма невязки (норма 2):
+        # Норма невязки (норма 2)
         residual_norm = np.linalg.norm(residual)
-        # Выводим невязку на каждой итерации
-        #print(f"Итерация {iteration + 1}, Норма невязки: {residual_norm}")
+
+        # Выводим информацию об итерации
+        print(f"Итерация {iteration + 1}:")
+        print(f"   Вектор невязки: {residual}")
+        print(f"   Норма невязки: {residual_norm}")
 
         # Проверка на сходимость
         if residual_norm < tol:
-            print(f"Метод Зейделя завершился на шаге {iteration + 1}")
-            return x_new
+            print(f"Метод Зейделя завершился на шаге {iteration + 1} с невязкой: {residual_norm}")
+            return x_new, residual, residual_norm
 
         x = x_new
 
     print("Метод Зейделя не сходится за заданное количество итераций.")
-    return x  # Возвращаем последнее приближение
+    return x, residual, residual_norm  # Возвращаем последнее приближение
 

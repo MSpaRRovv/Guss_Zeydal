@@ -55,5 +55,7 @@ def gauss_method(matrix_a: np.ndarray, vector_b: np.ndarray) -> np.ndarray:
             return "Система не имеет решений"
         x[i] = (augmented_matrix[i, -1] - sum_ax) / augmented_matrix[i, i]
 
-    return x
+    residual = np.dot(matrix_a, x) - vector_b
+    residual_norm = np.linalg.norm(residual)
+    return x, residual, residual_norm
 
