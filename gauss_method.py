@@ -1,61 +1,59 @@
 import numpy as np
+import json
 
-def gauss_method(matrix_a: np.ndarray, vector_b: np.ndarray) -> np.ndarray:
+def gauss_method(matrix_a: np.ndarray, vector_b: np.ndarray, output_file: str = "gauss_steps.txt"):
     """
-    Решение СЛАУ методом Гаусса с проверкой на совместность системы и на бесконечное количество решений.
-
-    Аргументы:
-        matrix_a (np.ndarray):  Матрица коэффициентов
-        vector_b (np.ndarray): Вектор правых частей
-
-    Возвращает:
-        np.ndarray или str: Вектор решений или текст с сообщением о проблемах с системой
+    Решение СЛАУ методом Гаусса с записью всех шагов в текстовый файл.
     """
     n = len(vector_b)
-
-    # Расширенная матрица [A|b]
     augmented_matrix = np.hstack((matrix_a, vector_b.reshape(-1, 1)))
+    
+    # Прямой ход
+    with open(output_file, "w") as f:  # Открываем файл для записи
+        for i in range(n):
+            max_row = i + np.argmax(np.abs(augmented_matrix[i:, i]))
+            if np.isclose(augmented_matrix[max_row, i], 0):
+                raise ValueError("Система не имеет единственного решения")
 
-    # Прямой ход (приведение к верхнетреугольному виду)
-    for i in range(n):
-        # Поиск максимального элемента в столбце для устойчивости
-        max_row = i + np.argmax(np.abs(augmented_matrix[i:, i]))
-        if augmented_matrix[max_row, i] == 0:
-    # Проверка на вырождение и совместность
-            if np.all(np.isclose(augmented_matrix[max_row, :-1], 0)) and not np.isclose(augmented_matrix[max_row, -1], 0):
-                return "Система не имеет решений"
-            else:
-                return "Система имеет бесконечное множество решений"
+            # Записываем текущую матрицу до перестановки
+            f.write(f"Перед перестановкой строк {i+1}:\n")
+            f.write(format_matrix(augmented_matrix))
+            f.write("\n")
 
-        
-        # Перестановка строк для улучшения устойчивости
-        augmented_matrix[[i, max_row]] = augmented_matrix[[max_row, i]]
+            # Перестановка строк
+            augmented_matrix[[i, max_row]] = augmented_matrix[[max_row, i]]
 
-        # Приведение матрицы к верхнетреугольному виду
-        for j in range(i + 1, n):
-            ratio = augmented_matrix[j, i] / augmented_matrix[i, i]
-            augmented_matrix[j, i:] = augmented_matrix[j, i:] - ratio * augmented_matrix[i, i:]
+            # Записываем текущую матрицу после перестановки
+            f.write(f"После перестановки строк {i+1}:\n")
+            f.write(format_matrix(augmented_matrix))
+            f.write("\n")
 
-    # Проверка на совместность системы
-    for i in range(n):
-        # Если строка выглядит как [0, 0, ..., 0 | c != 0], то система несовместна
-        if np.all(np.isclose(augmented_matrix[i, :-1], 0)) and not np.isclose(augmented_matrix[i, -1], 0):
-            return "Система не имеет решений"
+            for j in range(i + 1, n):
+                ratio = augmented_matrix[j, i] / augmented_matrix[i, i]
+                augmented_matrix[j, i:] -= ratio * augmented_matrix[i, i:]
 
-    # Обратный ход
-    x = np.zeros(n)
-    for i in range(n - 1, -1, -1):
-        sum_ax = 0
-        # Ручной расчет суммы произведений для обратного хода
-        for j in range(i + 1, n):
-            sum_ax += augmented_matrix[i, j] * x[j]
-        
-        # Проверка на размерности срезов перед расчетом
-        if augmented_matrix[i, i] == 0:
-            return "Система не имеет решений"
-        x[i] = (augmented_matrix[i, -1] - sum_ax) / augmented_matrix[i, i]
+            # Записываем матрицу после приведения к верхнетреугольному виду
+            f.write(f"После приведения к верхнетреугольному виду {i+1}:\n")
+            f.write(format_matrix(augmented_matrix))
+            f.write("\n")
 
-    residual = np.dot(matrix_a, x) - vector_b
-    residual_norm = np.linalg.norm(residual)
-    return x, residual, residual_norm
+        # Обратный ход
+        x = np.zeros(n)
+        for i in range(n - 1, -1, -1):
+            x[i] = (augmented_matrix[i, -1] - np.dot(augmented_matrix[i, i + 1:n], x[i + 1:])) / augmented_matrix[i, i]
 
+        # Добавляем итоговые результаты
+        f.write("Итоговые результаты:\n")
+        f.write(f"Решение: {x}\n")
+
+    return x
+
+def format_matrix(matrix: np.ndarray) -> str:
+    """
+    Форматирует матрицу в строку с выравниванием столбцов и разделением строк.
+    """
+    formatted_matrix = []
+    for row in matrix:
+        # Преобразуем числа в строку с нужной точностью
+        formatted_matrix.append("  ".join(f"{item:8.3f}" for item in row))  # Форматируем числа
+    return "\n".join(formatted_matrix)

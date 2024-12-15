@@ -35,10 +35,12 @@ def zeydal_method(
     vector_b: np.ndarray,
     x0: np.ndarray,
     tol: float = 0.001,
-    max_iterations: int = 1000
+    max_iterations: int = 1000,
+    output_file: str = "zeydal_output.txt"
 ) -> np.ndarray:
     """
     Решение СЛАУ методом Зейделя с проверкой диагонального преобладания.
+    Запись данных в текстовый файл.
     """
     matrix_a, vector_b = reorder_matrix_for_diagonal_dominance(matrix_a, vector_b)
 
@@ -49,32 +51,43 @@ def zeydal_method(
     n = len(matrix_a)
     x = np.copy(x0)
 
-    for iteration in range(max_iterations):
-        x_new = np.copy(x)
+    # Открываем файл для записи
+    with open(output_file, "w") as f:
+        f.write("Метод Зейделя: \n")
+        f.write(f"Начальная матрица A:\n{matrix_a}\n")
+        f.write(f"Вектор B:\n{vector_b}\n")
+        f.write("\nРезультаты по шагам:\n")
 
-        for i in range(n):
-            sum1 = sum(matrix_a[i][j] * x_new[j] for j in range(i))
-            sum2 = sum(matrix_a[i][j] * x[j] for j in range(i + 1, n))
-            x_new[i] = (vector_b[i] - sum1 - sum2) / matrix_a[i][i]
+        for iteration in range(max_iterations):
+            x_new = np.copy(x)
 
-        # Невязка: r = A * x_new - b
-        residual = np.dot(matrix_a, x_new) - vector_b
+            for i in range(n):
+                sum1 = sum(matrix_a[i][j] * x_new[j] for j in range(i))
+                sum2 = sum(matrix_a[i][j] * x[j] for j in range(i + 1, n))
+                x_new[i] = (vector_b[i] - sum1 - sum2) / matrix_a[i][i]
 
-        # Норма невязки (норма 2)
-        residual_norm = np.linalg.norm(residual)
+            # Невязка: r = A * x_new - b
+            residual = np.dot(matrix_a, x_new) - vector_b
 
-        # Выводим информацию об итерации
-        print(f"Итерация {iteration + 1}:")
-        print(f"   Вектор невязки: {residual}")
-        print(f"   Норма невязки: {residual_norm}")
+            # Норма невязки (норма 2)
+            residual_norm = np.linalg.norm(residual)
 
-        # Проверка на сходимость
-        if residual_norm < tol:
-            print(f"Метод Зейделя завершился на шаге {iteration + 1} с невязкой: {residual_norm}")
-            return x_new, residual, residual_norm
+            # Запись данных в файл
+            f.write(f"Итерация {iteration + 1}:\n")
+            f.write(f"   Вектор невязки: {residual}\n")
+            f.write(f"   Норма невязки: {residual_norm}\n")
 
-        x = x_new
+            # Проверка на сходимость
+            if residual_norm < tol:
+                f.write(f"Метод Зейделя завершился на шаге {iteration + 1} с невязкой: {residual_norm}\n")
+                f.write(f"Решение: {x_new}\n")
+                break
 
-    print("Метод Зейделя не сходится за заданное количество итераций.")
-    return x, residual, residual_norm  # Возвращаем последнее приближение
+            x = x_new
+
+        else:
+            f.write("Метод Зейделя не сходится за заданное количество итераций.\n")
+            f.write(f"Последнее приближение: {x_new}\n")
+
+    return x_new  # Возвращаем последнее приближение
 
