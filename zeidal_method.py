@@ -72,22 +72,21 @@ def zeydal_method(
             # Норма невязки (норма 2)
             residual_norm = np.linalg.norm(residual)
 
-            # Запись данных в файл
+            # Запись данных в файл с заданным форматированием (без экспоненциальной записи)
             f.write(f"Итерация {iteration + 1}:\n")
-            f.write(f"   Вектор невязки: {residual}\n")
-            f.write(f"   Норма невязки: {residual_norm}\n")
+            f.write(f"   Вектор невязки: {' '.join(f'{value:.10f}' for value in residual)}\n")
+            f.write(f"   Норма невязки: {residual_norm:.10f}\n")
 
             # Проверка на сходимость
             if residual_norm < tol:
-                f.write(f"Метод Зейделя завершился на шаге {iteration + 1} с невязкой: {residual_norm}\n")
-                f.write(f"Решение: {x_new}\n")
+                f.write(f"Метод Зейделя завершился на шаге {iteration + 1} с невязкой: {residual_norm:.6f}\n")
+                f.write(f"Решение: {' '.join(f'{value:.10f}' for value in x_new)}\n")
                 break
 
             x = x_new
 
         else:
             f.write("Метод Зейделя не сходится за заданное количество итераций.\n")
-            f.write(f"Последнее приближение: {x_new}\n")
+            f.write(f"Последнее приближение: {' '.join(f'{value:.6f}' for value in x_new)}\n")
 
     return x_new  # Возвращаем последнее приближение
-

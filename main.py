@@ -7,13 +7,8 @@ from zeidal_method import zeydal_method
 # Ввод матрицы и вектора
 A, b = input_matrix()
 
-# Метод Гаусса
-print("\nМетод Гаусса:")
+
 gauss_result = gauss_method(A.copy(), b.copy())
-
-
-# Метод Зейделя
-print("\nМетод Зейделя:")
 x0 = np.zeros(len(b))
 zeidel_result = zeydal_method(A.copy(), b.copy(), x0)
 
